@@ -1,0 +1,47 @@
+name: MCP Conversation Bridge
+version: "0.1.5"
+slug: mcp_conversation_bridge
+description: OpenAI-compatible bridge that executes Home Assistant MCP tools
+url: https://github.com/jpc71/ha-mcp-conv-bridge
+startup: services
+boot: auto
+init: false
+arch:
+  - aarch64
+  - amd64
+  - armhf
+  - armv7
+  - i386
+ports:
+  8099/tcp: 8099
+ports_description:
+  8099/tcp: Bridge API
+options:
+  mcp_url: "http://homeassistant.local:9583/private_replace_me"
+  mcp_auth_header: ""
+  mcp_auth_token: ""
+  upstream_base_url: "http://local-llm.host:11434/v1"
+  upstream_api_key: ""
+  upstream_model: "qwen2.5:3b"
+  upstream_timeout_seconds: 120
+  upstream_default_max_tokens: 300
+  max_exposed_tools: 8
+  max_tool_description_chars: 120
+  max_message_history: 6
+  debug_errors: false
+  tool_allowlist: []
+schema:
+  mcp_url: str
+  mcp_auth_header: str?
+  mcp_auth_token: password?
+  upstream_base_url: str
+  upstream_api_key: password?
+  upstream_model: str
+  upstream_timeout_seconds: int
+  upstream_default_max_tokens: int
+  max_exposed_tools: int
+  max_tool_description_chars: int
+  max_message_history: int
+  debug_errors: bool
+  tool_allowlist:
+    - str
