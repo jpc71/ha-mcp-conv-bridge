@@ -1,8 +1,8 @@
 name: MCP Conversation Bridge
-version: "0.1.5"
+version: "0.1.6"
 slug: mcp_conversation_bridge
 description: OpenAI-compatible bridge that executes Home Assistant MCP tools
-url: https://github.com/jpc71/ha-mcp-conv-bridge
+url: https://github.com/jpc71/ha-mcp-bridge/ 
 startup: services
 boot: auto
 init: false

@@ -1,4 +1,3 @@
-# Voice Assist Instructions
 
 You are Home Assistant voice assistant.
 
