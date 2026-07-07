@@ -11,7 +11,7 @@ from fastapi.responses import JSONResponse
 
 
 
-BRIDGE_VERSION = os.getenv("BRIDGE_VERSION", "0.1.5")
+BRIDGE_VERSION = os.getenv("BRIDGE_VERSION", "0.1.7")
 DEBUG_ERRORS = os.getenv("DEBUG_ERRORS", "false").strip().lower() in {"1", "true", "yes", "on"}
 
 app = FastAPI(title="ha-mcp-bridge", version=BRIDGE_VERSION)
@@ -64,6 +64,7 @@ UPSTREAM_API_KEY = os.getenv("UPSTREAM_API_KEY", "").strip()
 UPSTREAM_MODEL = _required_env("UPSTREAM_MODEL")
 UPSTREAM_TIMEOUT_SECONDS = _env_float("UPSTREAM_TIMEOUT_SECONDS", 120.0)
 UPSTREAM_DEFAULT_MAX_TOKENS = _env_int("UPSTREAM_DEFAULT_MAX_TOKENS", 300)
+UPSTREAM_NUM_CTX = _env_int("UPSTREAM_NUM_CTX", 0)
 MAX_EXPOSED_TOOLS = _env_int("MAX_EXPOSED_TOOLS", 8)
 MAX_TOOL_DESCRIPTION_CHARS = _env_int("MAX_TOOL_DESCRIPTION_CHARS", 120)
 MAX_MESSAGE_HISTORY = _env_int("MAX_MESSAGE_HISTORY", 6)
@@ -430,6 +431,10 @@ async def chat_completions(request: Request) -> JSONResponse:
             llm_payload["max_tokens"] = body["max_tokens"]
         elif UPSTREAM_DEFAULT_MAX_TOKENS > 0:
             llm_payload["max_tokens"] = UPSTREAM_DEFAULT_MAX_TOKENS
+
+        if UPSTREAM_NUM_CTX > 0:
+            llm_payload["options"] = {"num_ctx": UPSTREAM_NUM_CTX}
+            llm_payload["n_ctx"] = UPSTREAM_NUM_CTX
 
         try:
             llm_response = await _upstream_chat(llm_payload)

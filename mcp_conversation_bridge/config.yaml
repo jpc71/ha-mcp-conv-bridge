@@ -1,5 +1,5 @@
 name: MCP Conversation Bridge
-version: "0.1.6"
+version: "0.1.7"
 slug: mcp_conversation_bridge
 description: OpenAI-compatible bridge that executes Home Assistant MCP tools
 url: https://github.com/jpc71/ha-mcp-bridge/ 
@@ -25,6 +25,7 @@ options:
   upstream_model: "qwen2.5:3b"
   upstream_timeout_seconds: 120
   upstream_default_max_tokens: 300
+  upstream_num_ctx: 8192
   max_exposed_tools: 8
   max_tool_description_chars: 120
   max_message_history: 6
@@ -39,6 +40,7 @@ schema:
   upstream_model: str
   upstream_timeout_seconds: int
   upstream_default_max_tokens: int
+  upstream_num_ctx: int
   max_exposed_tools: int
   max_tool_description_chars: int
   max_message_history: int
