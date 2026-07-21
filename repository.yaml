@@ -1,5 +1,5 @@
 name: Campbell Technologies MCP Bridge Addon
-version: "0.1.6"
+version: "0.1.8"
 slug: mcp_bridge_addon
 url: https://github.com/jpc71/ha-mcp-bridge/mcp_conversation_bridge
 maintainer: Campbell Technologies

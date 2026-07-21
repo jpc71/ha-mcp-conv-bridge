@@ -11,7 +11,7 @@ from fastapi.responses import JSONResponse
 
 
 
-BRIDGE_VERSION = os.getenv("BRIDGE_VERSION", "0.1.7")
+BRIDGE_VERSION = os.getenv("BRIDGE_VERSION", "0.1.8")
 DEBUG_ERRORS = os.getenv("DEBUG_ERRORS", "false").strip().lower() in {"1", "true", "yes", "on"}
 
 app = FastAPI(title="ha-mcp-bridge", version=BRIDGE_VERSION)
@@ -71,6 +71,7 @@ MAX_MESSAGE_HISTORY = _env_int("MAX_MESSAGE_HISTORY", 6)
 MCP_AUTH_HEADER = os.getenv("MCP_AUTH_HEADER", "").strip()
 MCP_AUTH_TOKEN = os.getenv("MCP_AUTH_TOKEN", "").strip()
 TOOL_ALLOWLIST = _allowlist()
+VERIFICATION_WARNING = "state change could not be verified within timeout"
 
 MCP_REQUEST_TIMEOUT = httpx.Timeout(30.0, connect=10.0)
 UPSTREAM_REQUEST_TIMEOUT = httpx.Timeout(UPSTREAM_TIMEOUT_SECONDS, connect=10.0)
@@ -227,9 +228,72 @@ async def _call_tool(name: str, arguments: Dict[str, Any]) -> Dict[str, Any]:
 
     # Compatibility: different MCP servers expect either "arguments" or "input".
     try:
-        return await _mcp_rpc("tools/call", {"name": name, "arguments": arguments})
+        result = await _mcp_rpc("tools/call", {"name": name, "arguments": arguments})
     except HTTPException:
-        return await _mcp_rpc("tools/call", {"name": name, "input": arguments})
+        result = await _mcp_rpc("tools/call", {"name": name, "input": arguments})
+
+    return _normalize_tool_result(name, result)
+
+
+def _normalize_tool_result(name: str, result: Dict[str, Any]) -> Dict[str, Any]:
+    if not isinstance(result, dict):
+        return result
+
+    text_sources: List[str] = []
+
+    structured = result.get("structuredContent")
+    if isinstance(structured, dict):
+        warning_values = structured.get("warnings", [])
+        if isinstance(warning_values, list):
+            text_sources.extend(str(item) for item in warning_values)
+        elif warning_values:
+            text_sources.append(str(warning_values))
+
+        message_value = structured.get("message")
+        if message_value:
+            text_sources.append(str(message_value))
+
+        error_value = structured.get("error")
+        if isinstance(error_value, dict):
+            text_sources.extend(str(value) for value in error_value.values())
+        elif error_value:
+            text_sources.append(str(error_value))
+
+    warning_values = result.get("warnings", [])
+    if isinstance(warning_values, list):
+        text_sources.extend(str(item) for item in warning_values)
+    elif warning_values:
+        text_sources.append(str(warning_values))
+
+    message_value = result.get("message")
+    if message_value:
+        text_sources.append(str(message_value))
+
+    if not any(VERIFICATION_WARNING in text.lower() for text in text_sources):
+        return result
+
+    failure_payload: Dict[str, Any] = dict(result)
+    failure_payload["success"] = False
+    failure_payload["isError"] = True
+    failure_payload["error"] = {
+        "code": "STATE_VERIFICATION_FAILED",
+        "message": "State change could not be verified within timeout.",
+    }
+    failure_payload["message"] = "State change could not be verified within timeout."
+
+    structured_content = failure_payload.get("structuredContent")
+    if isinstance(structured_content, dict):
+        structured_failure = dict(structured_content)
+        structured_failure["success"] = False
+        structured_failure["isError"] = True
+        structured_failure["error"] = {
+            "code": "STATE_VERIFICATION_FAILED",
+            "message": "State change could not be verified within timeout.",
+        }
+        structured_failure["message"] = "State change could not be verified within timeout."
+        failure_payload["structuredContent"] = structured_failure
+
+    return failure_payload
 
 
 async def _upstream_chat(payload: Dict[str, Any]) -> Dict[str, Any]:

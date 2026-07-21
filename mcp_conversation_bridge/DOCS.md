@@ -49,7 +49,7 @@ curl -sS http://HOME_ASSISTANT_IP:8099/version
 Expected payload:
 
 ```json
-{"status":"ok","version":"0.1.3"}
+{"status":"ok","version":"0.1.8"}
 ```
 
 `/health/deps` returns MCP and upstream LLM dependency status with latency and error details:
@@ -57,7 +57,7 @@ Expected payload:
 ```json
 {
   "status": "ok",
-  "version": "0.1.3",
+  "version": "0.1.8",
   "dependencies": {
     "mcp": {"ok": true, "latency_ms": 54.2, "tool_count": 34},
     "llm": {"ok": true, "latency_ms": 22.8, "model_count": 3}
@@ -79,7 +79,7 @@ When enabled, unexpected server errors return structured JSON:
   "exception_type": "ConnectError",
   "message": "...",
   "traceback": "...",
-  "version": "0.1.3"
+  "version": "0.1.8"
 }
 ```
 
